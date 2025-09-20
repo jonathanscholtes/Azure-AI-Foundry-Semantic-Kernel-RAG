@@ -11,9 +11,10 @@ from semantic_kernel.contents import ChatMessageContent
 from semantic_kernel.agents import ChatCompletionAgent
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from app.schemas.agent import AgentResponse
-from ..evaluations.evaluation import EvaluationEngine, EvaluationStore
-from ..plugins import SearchPlugin
-from ..history import CosmosChatHistoryStore,ChatRole
+from ..evaluations.evaluation import EvaluationEngine
+from ..evaluations.cosmos_evaluation_store import CosmosEvaluationStore
+from ..plugins.azure_search import AzureSearchPlugin
+from ..history.cosmos_chat_history import CosmosChatHistoryStore,ChatRole
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,8 @@ class SemanticKernelHRAgent:
         self.chat_history = None
         self.session_id = None
         self.request_id = None
+        self.evaluation_engine = EvaluationEngine()
+        self.evaluation_store = CosmosEvaluationStore()
         
 
     async def initialize(self):
@@ -56,7 +59,7 @@ class SemanticKernelHRAgent:
             instructions = """You are an HR assistant. You help employees with HR-related queries.
             Use the 'search' plugin to look up information in the HR knowledge base. Do not make up answers. If you cannot find the answer, say "I don't know"."""
 
-            search_plugin = SearchPlugin()
+            search_plugin = AzureSearchPlugin()
 
             agent = ChatCompletionAgent(
             kernel=kernel, 
@@ -129,6 +132,29 @@ class SemanticKernelHRAgent:
                 is_task_complete=True,
                 require_user_input=True,
             )
+    
+    def _run_evaluation(self, user_input: str, response: str):
+        if not self.request_id:
+            logger.warning("No request_id set; skipping evaluation storage.")
+            return
+
+        evaluation = self.evaluation_engine.evaluate_response(user_input, response, self.chat_history)
+        if not evaluation:
+            logger.info("No evaluation generated; skipping storage.")
+            return
+
+        try:
+            self.evaluation_store.store_evaluation(
+                session_id=self.session_id,
+                response_id=self.request_id,
+                user_query=user_input,
+                response=response,
+                evaluation=evaluation,
+                metadata={"agent": "hr_agent"}
+            )
+            logger.info(f"Stored evaluation for request_id {self.request_id}")
+        except Exception as e:
+            logger.error(f"Failed to store evaluation: {e}")
 
     async def invoke(self, user_input: str, session_id: str):
         
@@ -141,4 +167,7 @@ class SemanticKernelHRAgent:
         async for result in self.agent.invoke(messages=self.chat_history, on_intermediate_message=self.__on_intermediate_message):
             final_response = result 
 
-        return self._get_agent_response(final_response)
+        # Run only if eval flag is set
+        self._run_evaluation(user_input, final_response.content.content if final_response else "")
+
+        return self._get_agent_response(final_response.content.content)
