@@ -11,9 +11,9 @@ from semantic_kernel.contents import ChatMessageContent
 from semantic_kernel.agents import ChatCompletionAgent
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from app.schemas.agent import AgentResponse
-from evaluations.evaluation import EvaluationEngine, EvaluationStore
-from plugins import SearchPlugin
-from history import CosmosChatHistoryStore,ChatRole
+from ..evaluations.evaluation import EvaluationEngine, EvaluationStore
+from ..plugins import SearchPlugin
+from ..history import CosmosChatHistoryStore,ChatRole
 
 logger = logging.getLogger(__name__)
 

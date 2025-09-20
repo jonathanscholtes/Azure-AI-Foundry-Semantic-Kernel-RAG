@@ -12,6 +12,8 @@ param cosmosdbEvaluationContainer string
 
 
 
+@description('Endpoint URL of the Azure Cognitive Search service (e.g., https://<service>.search.windows.net)')
+param searchServiceEndpoint string
 
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' existing = {
@@ -71,6 +73,19 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
           name: 'COSMOSDB_EVALUATIONS_CONTAINER'
           value: cosmosdbEvaluationContainer
         } 
+        {
+              name: 'AZURE_AI_SEARCH_ENDPOINT'
+              value: searchServiceEndpoint
+            } 
+             {
+              name: 'AZURE_AI_SEARCH_INDEX'
+              value: 'policy-index'
+            } 
+            {
+              name: 'AZURE_SEARCH_VECTOR_FIELD'
+              value: 'content_vector'
+            } 
+
         {
           name: 'AZURE_CLIENT_ID'
           value: managedIdentity.properties.clientId

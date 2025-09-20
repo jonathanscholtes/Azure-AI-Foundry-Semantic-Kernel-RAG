@@ -33,7 +33,7 @@ param appInsightsName string
 param appServicePlanName string
 
 @description('Name of the Azure Key Vault used to store secrets and keys securely')
-param keyVaultUri string
+param keyVaultName string
 
 @description('Name of the Cosmos DB Endpoint')
 param cosmosdbEnpoint string
@@ -58,7 +58,7 @@ module appSecrets 'app-secrets.bicep' = {
   name: 'appSecrets'
   scope: resourceGroup
   params: {
-    keyVaultName: keyVaultUri
+    keyVaultName: keyVaultName
     searchServicename: searchServicename
   }
 }
@@ -100,6 +100,7 @@ module backEndWebApp 'backend-web-app.bicep' = {
     cosmosdbDatabase:'chatdatabase'
     cosmosdbHistoryContainer:'chathistory'
     cosmosdbEvaluationContainer:'evaluation'
+    searchServiceEndpoint: appSecrets.outputs.searchServiceEndpoint
    }
 }
 

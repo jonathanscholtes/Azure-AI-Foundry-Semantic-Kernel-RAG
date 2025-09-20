@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routes.ecommerce import router as ecommerce_router
+from .routes.hrpolicy import router as hrpolicy_router
 from .logger import configure_logging
 
 
@@ -20,6 +20,6 @@ def create_app() -> FastAPI:
     )
 
     # Include routers
-    app.include_router(ecommerce_router)
+    app.include_router(hrpolicy_router)
 
     return app

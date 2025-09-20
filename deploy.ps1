@@ -72,7 +72,7 @@ $resourceGroupName = $deploymentOutputJsonInfra.resourceGroupName.value
 $storageAccountName = $deploymentOutputJsonInfra.storageAccountName.value
 $logAnalyticsWorkspaceName = $deploymentOutputJsonInfra.logAnalyticsWorkspaceName.value
 $applicationInsightsName = $deploymentOutputJsonInfra.applicationInsightsName.value
-$keyVaultUri = $deploymentOutputJsonInfra.keyVaultUri.value
+$keyVaultName = $deploymentOutputJsonInfra.keyVaultName.value
 $OpenAIEndPoint = $deploymentOutputJsonInfra.OpenAIEndPoint.value
 $searchServicename = $deploymentOutputJsonInfra.searchServicename.value
 $cosmosdbEndpoint = $deploymentOutputJsonInfra.cosmosdbEndpoint.value
@@ -96,7 +96,7 @@ $deploymentOutputApps = az deployment sub create  `
         logAnalyticsWorkspaceName=$logAnalyticsWorkspaceName `
         appInsightsName=$applicationInsightsName `
         appServicePlanName=$appServicePlanName `
-        keyVaultUri=$keyVaultUri `
+        keyVaultName=$keyVaultName `
         OpenAIEndPoint=$OpenAIEndPoint `
         searchServicename=$searchServicename `
         storageAccountName=$storageAccountName `
@@ -131,8 +131,8 @@ Set-Location -Path .\scripts
 Write-Output "*****************************************"
 Write-Output "Deploying Function Application from scripts"
 Write-Output "If timeout occurs, rerun the following command from scripts:"
-Write-Output ".\deploy_functionapp.ps1 -functionAppName $functionAppName -resourceGroupName $resourceGroupName -pythonAppPath ..\src\DataLoaderFunction"
-& .\deploy_functionapp.ps1 -functionAppName $functionAppName -resourceGroupName $resourceGroupName -pythonAppPath "..\src\DataLoaderFunction"
+Write-Output ".\deploy_functionapp.ps1 -functionAppName $functionAppName -resourceGroupName $resourceGroupName -pythonAppPath ..\src\DocumentProcessingFunction"
+& .\deploy_functionapp.ps1 -functionAppName $functionAppName -resourceGroupName $resourceGroupName -pythonAppPath "..\src\DocumentProcessingFunction"
 
 
 # Deploy Python FastAPI for Backend
@@ -152,10 +152,5 @@ Write-Output ".\deploy_web.ps1 -webAppName $frontendWebAppName -resourceGroupNam
 & .\deploy_web.ps1 -webAppName $frontendWebAppName -resourceGroupName $resourceGroupName -apiURL $appServiceURL -appPath "..\src\web"
 
 Set-Location -Path ..
-
-Write-Host "`n✅ Deployment Complete!"
-
-Set-Location -Path ..
-
 
 Write-Host "`n✅ Deployment Complete!"

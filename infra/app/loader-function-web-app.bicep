@@ -126,7 +126,7 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
         }       
         {
           name: 'AZURE_AI_SEARCH_INDEX'
-          value: 'workshop-index'
+          value: 'policy-index'
         } 
         {
           name: 'DOCUMENT_CHUNK_SIZE'
