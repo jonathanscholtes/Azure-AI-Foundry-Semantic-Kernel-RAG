@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+gunicorn
+jinja2
+python-multipart
+azure-core==1.30.2
+azure-ai-projects
+azure-ai-agents>=1.2.0b3
+azure-ai-evaluation
+azure-identity
+python-dotenv==1.0.0
+azure-search-documents==11.5.2
+azure-cosmos
+azure-monitor-opentelemetry-exporter
+semantic-kernel[mcp,azure]==1.36.2
