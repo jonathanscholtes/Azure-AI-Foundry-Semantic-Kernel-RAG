@@ -1,5 +1,7 @@
 azure-functions
 azure-functions-durable
+azure-storage-blob
+requests
 azure-identity==1.17.1
 azure-core==1.33.0
 azure-ai-projects
