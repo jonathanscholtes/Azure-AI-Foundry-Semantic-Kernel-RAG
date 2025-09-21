@@ -7,8 +7,7 @@ import os
 
 from dotenv import load_dotenv
 from enum import Enum
-from typing import Optional
-
+from typing import Any, Dict, Optional
 
 load_dotenv(override=True)
 
@@ -76,10 +75,12 @@ class CosmosChatHistoryStore:
         self,
         history: ChatHistory,
         session_id: str,
+        response_id: str,
         role: ChatRole,
         content: str,
         tool_call_id: Optional[str] = None,
         function_name: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None
     ):
         await self._ensure_container()
 
@@ -99,10 +100,13 @@ class CosmosChatHistoryStore:
         item = {
             "id": str(uuid.uuid4()),
             "sessionid": session_id,
+            "response_id": response_id,
             "message": content,
             "role": role.value,  # store as string
             "tool_call_id": tool_call_id,
             "function_name": function_name,
+            "metadata": metadata or {},
             "timestamp": datetime.utcnow().isoformat()
+            
         }
         await self._container.create_item(body=item)

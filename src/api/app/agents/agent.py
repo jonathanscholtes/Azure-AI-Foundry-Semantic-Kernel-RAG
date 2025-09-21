@@ -1,41 +1,48 @@
-
 import logging
 import os
 from os import environ
+from typing import Any, Dict, Optional
+from functools import partial
 
+from dotenv import load_dotenv
 from semantic_kernel import Kernel
-from semantic_kernel.contents import ChatMessageContent
+from semantic_kernel.contents import ChatMessageContent, ChatHistory
 from semantic_kernel.agents import ChatCompletionAgent
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
-from app.schemas.agent import AgentResponse
-from app.history.cosmos_chat_history import CosmosChatHistoryStore,ChatRole
-from semantic_kernel.contents import ChatHistory
-from typing import Optional
-from app.schemas.agent import AgentResponse
-from dotenv import load_dotenv
-from azure.identity.aio import DefaultAzureCredential
 
+from app.schemas.agent import AgentResponse
+from app.history.cosmos_chat_history import CosmosChatHistoryStore, ChatRole
 
 load_dotenv()
+logger = logging.getLogger(__name__)
+
 
 class BaseAgent:
-
-    def __init__(self, kernel: Optional[AzureChatCompletion] = None):
-        
-        # Defer heavy setup to initialize()
+    def __init__(self, kernel: Optional[Kernel] = None):
+        """
+        BaseAgent holds shared components for all agents:
+        - kernel (can be per-agent)
+        - agent (ChatCompletionAgent)
+        - history_store
+        Per-request state (session_id, chat_history) should be passed to methods.
+        """
         self.kernel = kernel
-        self.agent = None
-        self.thread = None
-        self.history_store:CosmosChatHistoryStore = None
-        self.chat_history:ChatHistory = None
-        self.session_id = None
-        self.request_id = None
+        self.agent: Optional[ChatCompletionAgent] = None
+        self.history_store: Optional[CosmosChatHistoryStore] = None
+ 
 
     async def initialize(self):
+        """
+        Initialize the kernel and history store if not provided.
+        Uses async DefaultAzureCredential and passes token directly.
+        """
         if self.kernel is None:
+            from azure.identity.aio import DefaultAzureCredential
 
-            credential = DefaultAzureCredential()
-            token = (await credential.get_token("https://cognitiveservices.azure.com/.default")).token
+            async with DefaultAzureCredential() as credential:
+                token = (await credential.get_token(
+                    "https://cognitiveservices.azure.com/.default"
+                )).token
 
             environ.update({
                 "OPENAI_API_TYPE": "azure_ad",
@@ -52,44 +59,41 @@ class BaseAgent:
             ]
             missing = [v for v in required if v not in os.environ]
             if missing:
-                raise RuntimeError(f"Missing required env vars: {missing}")
-            
-            self.kernel = Kernel()
+                raise RuntimeError(f"Missing required environment variables: {missing}")
 
+            self.kernel = Kernel()
             self.kernel.add_service(AzureChatCompletion(
                 service_id="chat",
                 deployment_name=os.environ["AZURE_OPENAI_MODEL"],
                 endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-                api_key=os.environ["AZURE_OPENAI_API_KEY"],
+                api_key=os.environ["AZURE_OPENAI_API_KEY"]
             ))
 
-            self.history_store = CosmosChatHistoryStore()
+        # Initialize history store
+        self.history_store = CosmosChatHistoryStore()
 
-    async def on_intermediate_message(self,agent_result):
-
-        # Capture assistant content
+    async def on_intermediate_message(self, agent_result, session_id: str, response_id:str, chat_history: ChatHistory,metadata: Optional[Dict[str, Any]] = None):
+        """
+        Thread-safe handler for intermediate messages.
+        Persists assistant content and tool outputs per request.
+        """
+        # Persist assistant content
         content = agent_result.content
         if content:
             content_text = content.content if isinstance(content, ChatMessageContent) else str(content)
-            await self.history_store.add_message(self.chat_history, self.session_id, ChatRole.ASSISTANT, content_text)
+            await self.history_store.add_message(chat_history, session_id, response_id, ChatRole.ASSISTANT, content_text, metadata=metadata)
 
-        # Capture tool calls and results
+        # Persist tool outputs
         for item in getattr(agent_result, "items", []):
             tool_call_id = getattr(item, "call_id", None) or getattr(item, "id", None)
             if not tool_call_id:
-                continue  # skip if no call_id
+                continue
 
-            # Function name for bookkeeping
             function_name = getattr(item, "function_name", "N/A")
-
-            # Print the invocation (DEBUG ONLY — not persisted)
-            if hasattr(item, "arguments"):
-                print(f"Tool invocation: {function_name}({item.arguments})")
-
-            # Extract the result content
             result_content = getattr(item, "result", item)
+
             if isinstance(result_content, list):
-                tool_text = "\n".join([c.text if hasattr(c, "text") else str(c) for c in result_content])
+                tool_text = "\n".join([getattr(c, "text", str(c)) for c in result_content])
             elif hasattr(result_content, "text"):
                 tool_text = result_content.text
             else:
@@ -97,32 +101,17 @@ class BaseAgent:
 
             if function_name in tool_text:
                 continue
-            
-            #print(f"Tool call ID: {tool_call_id}")
-            #print(f"Tool Function Name: {function_name}")
-            print(f"Tool output: {tool_text}")
+
+            logger.debug(f"Tool invocation: {function_name}")
+            logger.debug(f"Tool output: {tool_text}")
 
             await self.history_store.add_message(
-                self.chat_history,
-                self.session_id,
+                chat_history,
+                session_id,
+                response_id,
                 ChatRole.ASSISTANT,
                 content=tool_text,
                 tool_call_id=tool_call_id,
-                function_name=function_name
-            )
-
-    def get_agent_response(self, content):
-            # Simplified extraction
-            message_text = ""
-            inner = getattr(content, "inner_content", None)
-            if inner and getattr(inner, "choices", None):
-                for choice in inner.choices:
-                    if getattr(choice, "finish_reason", "") == "stop" and getattr(choice, "message", None):
-                        message_text = getattr(choice.message, "content", "")
-                        break
-
-            return AgentResponse(
-                content=message_text,
-                is_task_complete=True,
-                require_user_input=True,
+                function_name=function_name,
+                metadata=metadata
             )

@@ -9,15 +9,12 @@ from typing import Any, Dict, Optional
 
 load_dotenv(override=True)
 
-class EvaluationStore:
-    async def store_evaluation(self, session_id: str, response_id: str, user_query: str, response: str, evaluation: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None):
-        raise NotImplementedError("store_evaluation must be implemented by subclasses")
 
-class CosmosEvaluationStore(EvaluationStore):
+class CosmosEvaluationStore():
     def __init__(self):
         self._url = os.getenv("COSMOSDB_ENDPOINT")
         self._db_name = os.getenv("COSMOSDB_DATABASE")
-        self._container_name = os.getenv("COSMOSDB_EVALUATIONS_CONTAINER", "evaluations")
+        self._container_name = os.getenv("COSMOSDB_EVALUATIONS_CONTAINER", "evaluation")
 
         if not self._url or not self._db_name:
             missing = [
@@ -25,6 +22,7 @@ class CosmosEvaluationStore(EvaluationStore):
                 for name, value in [
                     ("COSMOSDB_ENDPOINT", self._url),
                     ("COSMOSDB_DATABASE", self._db_name),
+                    ("COSMOSDB_EVALUATIONS_CONTAINER", self._container_name),
                 ]
                 if not value
             ]
@@ -43,7 +41,11 @@ class CosmosEvaluationStore(EvaluationStore):
             database = self._client.get_database_client(self._db_name)
             self._container = database.get_container_client(self._container_name)
 
-    async def store_evaluation(self, session_id: str, response_id: str, user_query: str, response: str, evaluation: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None):
+    async def store_evaluation(self, session_id: str, response_id: str,
+                                user_query: str,
+                                  response: str,
+                                    evaluation: Dict[str, Any],
+                                      metadata: Optional[Dict[str, Any]] = None):
         await self._ensure_container()
 
         item = {
