@@ -89,6 +89,30 @@ module cosmosDb 'cosmosdb/main.bicep' = {
       vectorEmbeddings: [] // Placeholder for future vector embedding configuration
     }
   }
+  {
+    name: 'evalsummary' // Container for storing conversatin evaluations
+    partitionKeyPaths: [
+      '/id' 
+    ]
+    ttlValue: 0 
+    indexingPolicy: {
+      automatic: true // Automatically index new data
+      indexingMode: 'consistent' // Ensure data is indexed immediately
+      includedPaths: [
+        {
+          path: '/agent/?' 
+        }
+      ]
+      excludedPaths: [
+        {
+          path: '/*' // Exclude all other paths from indexing
+        }
+      ]
+    }
+    vectorEmbeddingPolicy: {
+      vectorEmbeddings: [] // Placeholder for future vector embedding configuration
+    }
+  }
  
 ]
   }

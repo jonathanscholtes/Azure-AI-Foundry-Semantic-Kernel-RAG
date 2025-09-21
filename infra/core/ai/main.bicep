@@ -54,5 +54,6 @@ module aifoundry 'aifoundry/main.bicep' = {
 
 output aiservicesTarget string = aifoundry.outputs.aiservicesTarget
 output OpenAIEndPoint string = aifoundry.outputs.OpenAIEndPoint
+output aiProjectEndpoint string = aifoundry.outputs.aiProjectEndpoint
 output searchServicename string = searchServicename
 

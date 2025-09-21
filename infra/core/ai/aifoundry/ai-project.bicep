@@ -32,3 +32,4 @@ resource aiProject 'Microsoft.CognitiveServices/accounts/projects@2025-06-01' = 
 
 
 output aiProjectName string = aiProject.name
+output aiProjectEndpoint string = aiProject.properties.endpoints['AI Foundry API']

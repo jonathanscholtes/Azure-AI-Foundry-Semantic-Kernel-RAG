@@ -1,0 +1,8 @@
+azure-functions
+azure-functions-durable
+azure-identity==1.17.1
+azure-core==1.33.0
+azure-ai-projects
+azure-ai-agents>=1.2.0b3
+python-dotenv==1.0.0
+azure-cosmos

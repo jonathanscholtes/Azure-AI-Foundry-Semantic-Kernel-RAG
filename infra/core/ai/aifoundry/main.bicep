@@ -60,5 +60,5 @@ module aiProjects 'ai-project.bicep' =  {
 
 output aiservicesTarget string = aiaccount.outputs.aiAccountTarget
 output OpenAIEndPoint string = aiaccount.outputs.OpenAIEndPoint
-
+output aiProjectEndpoint string = aiProjects.outputs.aiProjectEndpoint
 

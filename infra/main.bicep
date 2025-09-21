@@ -103,3 +103,4 @@ output keyVaultName string = security.outputs.keyVaultName
 output OpenAIEndPoint string = ai.outputs.OpenAIEndPoint 
 output searchServicename string = ai.outputs.searchServicename
 output cosmosdbEndpoint string = data.outputs.cosmosdbEndpoint
+output aiProjectEndpoint string = ai.outputs.aiProjectEndpoint

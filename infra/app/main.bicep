@@ -48,6 +48,8 @@ param searchServicename string
 param storageAccountName string
 
 
+param aiProjectEndpoint string
+
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2024-03-01' existing =  {
   name: resourceGroupName
 }
@@ -81,6 +83,29 @@ module loaderFunctionWebApp 'loader-function-web-app.bicep' = {
     azureAiSearchBatchSize: 100
     documentChunkOverlap: 500
     documentChunkSize: 2000
+  
+  }
+}
+
+
+module evalFunctionWebApp 'eval-function-web-app.bicep' = {
+  name: 'evalFunctionWebApp'
+  scope: resourceGroup
+  params: { 
+    location: location
+    identityName: managedIdentityName
+    functionAppName: 'func-eval-${resourceToken}'
+    functionAppPlanName: appServicePlanName
+    StorageAccountName: storageAccountName
+    logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
+    appInsightsName: appInsightsName
+    keyVaultUri:appSecrets.outputs.keyVaultUri
+    OpenAIEndPoint: OpenAIEndPoint
+    cosmosdbEnpoint:cosmosdbEnpoint
+    cosmosdbDatabase:'chatdatabase'
+    cosmosdbSummaryContainer:'evalsummary'
+    cosmosdbEvaluationContainer:'evaluation'
+    aiProjectEndpoint: aiProjectEndpoint
   
   }
 }
@@ -123,4 +148,4 @@ output functionAppName string =  loaderFunctionWebApp.outputs.functionAppName
 output backEndWebAppName string =  backEndWebApp.outputs.backendWebAppName
 output frontendWebAppName string = frontEndWebApp.outputs.frontendWebAppName
 output appServiceURL string = frontEndWebApp.outputs.appServiceURL
-
+output evalFunctionAppName string =  evalFunctionWebApp.outputs.functionAppName

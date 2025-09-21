@@ -10,7 +10,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
     tier: 'Basic'
     size: 'B2'
    family: 'B'
-    capacity: 2
+    capacity: 3
   }
   properties: {
     reserved: linuxMachine

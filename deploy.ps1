@@ -76,6 +76,7 @@ $keyVaultName = $deploymentOutputJsonInfra.keyVaultName.value
 $OpenAIEndPoint = $deploymentOutputJsonInfra.OpenAIEndPoint.value
 $searchServicename = $deploymentOutputJsonInfra.searchServicename.value
 $cosmosdbEndpoint = $deploymentOutputJsonInfra.cosmosdbEndpoint.value
+$aiProjectEndpoint = $deploymentOutputJsonInfra.aiProjectEndpoint.value
 
 
 
@@ -101,6 +102,7 @@ $deploymentOutputApps = az deployment sub create  `
         searchServicename=$searchServicename `
         storageAccountName=$storageAccountName `
         cosmosdbEnpoint=$cosmosdbEndpoint `
+        aiProjectEndpoint=$aiProjectEndpoint `
     --query "properties.outputs"
 
 
@@ -109,7 +111,7 @@ $functionAppName = $deploymentOutputJson.functionAppName.value
 $backEndWebAppName = $deploymentOutputJson.backEndWebAppName.value
 $frontendWebAppName = $deploymentOutputJson.frontendWebAppName.value
 $appServiceURL = $deploymentOutputJson.appServiceURL.value
-
+$evalFunctionAppName = $deploymentOutputJson.evalFunctionAppName.value
 
 Write-Host "Waiting for App Services before pushing code"
 
@@ -143,6 +145,14 @@ Write-Output ".\deploy_api.ps1 -apiAppName $backEndWebAppName -resourceGroupName
 & .\deploy_api.ps1 -apiAppName $backEndWebAppName -resourceGroupName $resourceGroupName -pythonAppPath "..\src\api"
 
 
+# Deploy Eval Azure Function for Loading AI Search Indexes from PDFs 
+Write-Output "*****************************************"
+Write-Output "Deploying EvaluationAnalyzerFunction from scripts"
+Write-Output "If timeout occurs, rerun the following command from scripts:"
+Write-Output ".\deploy_functionapp.ps1 -functionAppName $evalFunctionAppName -resourceGroupName $resourceGroupName -pythonAppPath ..\src\EvaluationAnalyzerFunction"
+& .\deploy_functionapp.ps1 -functionAppName $evalFunctionAppName -resourceGroupName $resourceGroupName -pythonAppPath "..\src\EvaluationAnalyzerFunction"
+
+
 
 # Deploy Web Application
 Write-Output "*****************************************"
@@ -150,6 +160,9 @@ Write-Output "Deploying Web Application from scripts"
 Write-Output "If timeout occurs, rerun the following command from scripts:"
 Write-Output ".\deploy_web.ps1 -webAppName $frontendWebAppName -resourceGroupName $resourceGroupName -apiURL $appServiceURL -appPath ..\src\web" 
 & .\deploy_web.ps1 -webAppName $frontendWebAppName -resourceGroupName $resourceGroupName -apiURL $appServiceURL -appPath "..\src\web"
+
+
+
 
 Set-Location -Path ..
 
