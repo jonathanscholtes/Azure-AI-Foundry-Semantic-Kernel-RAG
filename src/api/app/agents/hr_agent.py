@@ -18,6 +18,8 @@ from app.plugins.azure_search import AzureSearchPlugin
 from app.history.cosmos_chat_history import CosmosChatHistoryStore, ChatRole
 from app.agents.agent import BaseAgent
 
+import uuid
+
 load_dotenv()
 
 logger = logging.getLogger(__name__)
@@ -54,8 +56,8 @@ class SemanticKernelHRAgent(BaseAgent):
 
 
     
-    def _run_evaluation(self, user_input: str, response: str):
-        if not self.request_id:
+    def _run_evaluation(self, user_input: str, response: str, request_id: str):
+        if not request_id:
             logger.warning("No request_id set; skipping evaluation storage.")
             return
 
@@ -81,16 +83,28 @@ class SemanticKernelHRAgent(BaseAgent):
 
     async def invoke(self, user_input: str, session_id: str):
         
-    
+        
+        request_id = str(uuid.uuid4())
+
+        # make thread safe
+        self.session_id = session_id
+
         self.chat_history = await self.history_store.load(session_id)
 
+        
         await self.history_store.add_message(self.chat_history,session_id, ChatRole.USER, user_input)
 
         final_response = None
-        async for result in self.agent.invoke(messages=self.chat_history, on_intermediate_message=super().__on_intermediate_message):
+        async for result in self.agent.invoke(messages=self.chat_history, on_intermediate_message=super().on_intermediate_message):
             final_response = result 
 
         # Run only if eval flag is set
-        self._run_evaluation(user_input, final_response.content.content if final_response else "")
+        self._run_evaluation(user_input, final_response.content.content if final_response else "",request_id)
+
+        await self.history_store.add_message(self.chat_history,session_id, ChatRole.ASSISTANT, final_response.content.content)
        
-        return super()._get_agent_response(final_response.content.content)
+        return AgentResponse(
+                content=final_response.content.content,
+                is_task_complete=True,
+                require_user_input=True,
+            )

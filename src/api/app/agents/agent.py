@@ -54,9 +54,9 @@ class BaseAgent:
             if missing:
                 raise RuntimeError(f"Missing required env vars: {missing}")
             
-            kernel = Kernel()
+            self.kernel = Kernel()
 
-            kernel.add_service(AzureChatCompletion(
+            self.kernel.add_service(AzureChatCompletion(
                 service_id="chat",
                 deployment_name=os.environ["AZURE_OPENAI_MODEL"],
                 endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
@@ -65,7 +65,7 @@ class BaseAgent:
 
             self.history_store = CosmosChatHistoryStore()
 
-    async def __on_intermediate_message(self,agent_result):
+    async def on_intermediate_message(self,agent_result):
 
         # Capture assistant content
         content = agent_result.content
@@ -111,7 +111,7 @@ class BaseAgent:
                 function_name=function_name
             )
 
-    def _get_agent_response(self, content):
+    def get_agent_response(self, content):
             # Simplified extraction
             message_text = ""
             inner = getattr(content, "inner_content", None)
