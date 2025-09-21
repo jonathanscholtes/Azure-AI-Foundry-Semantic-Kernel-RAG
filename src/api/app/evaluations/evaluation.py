@@ -2,12 +2,10 @@ import json
 from dotenv import load_dotenv
 from os import environ
 from semantic_kernel.contents import ChatHistory
-
-
-load_dotenv(override=True)
-
 from azure.ai.evaluation import GroundednessEvaluator, CoherenceEvaluator, RelevanceEvaluator
 from typing import Dict, Any
+
+load_dotenv(override=True)
 
 
 class EvaluationEngine:

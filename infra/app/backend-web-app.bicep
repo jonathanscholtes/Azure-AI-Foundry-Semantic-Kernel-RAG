@@ -52,7 +52,11 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
         {
           name: 'AZURE_OPENAI_MODEL'
           value: 'gpt-4o'
-        }    
+        } 
+        {
+          name: 'AZURE_OPENAI_API_VERSION'
+          value: '2025-01-01-preview'
+        }      
         {
           name: 'AZURE_OPENAI_ENDPOINT'
           value: OpenAIEndPoint

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 import logging
 
-from ..agents.hr_agent import SemanticKernelHRAgent
-from ..schemas.agent import AgentRequest, AgentResponse
+from app.agents.hr_agent import SemanticKernelHRAgent
+from app.schemas.agent import AgentRequest, AgentResponse
 
 router = APIRouter()
 

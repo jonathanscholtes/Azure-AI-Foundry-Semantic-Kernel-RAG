@@ -92,6 +92,10 @@ resource cosmosDbRoleDefinition 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDe
         dataActions: [
           'Microsoft.DocumentDB/databaseAccounts/readMetadata'
           'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/read'
+          'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/create'
+          'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/replace'
+          'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/upsert'
+          'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/delete'
           'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/executeQuery'
           'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/readChangeFeed'
         ]

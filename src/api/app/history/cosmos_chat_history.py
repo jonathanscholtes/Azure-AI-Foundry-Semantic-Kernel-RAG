@@ -58,7 +58,7 @@ class CosmosChatHistoryStore:
         query = "SELECT * FROM c WHERE c.sessionid = @sid"
         params = [{"name": "@sid", "value": session_id}]
 
-        results = self._container.query_items(query, parameters=params, enable_cross_partition_query=True)
+        results = self._container.query_items(query, parameters=params)
 
         async for item in results:
             role = item.get("role")
