@@ -19,10 +19,26 @@ async def start_evaluations(req: func.HttpRequest, client):
 
     function_name = req.route_params.get('functionName')
 
-    # Parse request
-    #params = req.get_json()  # or json.loads(req.get_body())
+    # Try to get JSON body
+    try:
+        params = req.get_json()
+    except ValueError:
+        # Fallback: get from query string
+        params = {
+            "agent": req.params.get("agent"),
+            "date": req.params.get("date")
+        }
+
+    # Validate required parameters
+    if not params.get("agent") or not params.get("date"):
+        return func.HttpResponse(
+            "Missing required parameters 'agent' and 'date'.",
+            status_code=400
+        )
     
-    instance_id = await client.start_new(function_name, None, {"agent": "HR_Agent", "date": "2025-09-21"})
+    #{"agent": "HR_Agent", "date": "2025-09-21"}
+    
+    instance_id = await client.start_new(function_name, None,params )
     
     response = client.create_check_status_response(req, instance_id)
     return response
