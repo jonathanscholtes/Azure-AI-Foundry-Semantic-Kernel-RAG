@@ -127,6 +127,29 @@ resource roleAssignmentUser 'Microsoft.Authorization/roleAssignments@2020-04-01-
 }
 
 
+resource roleAiUser 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(managedIdentity.id, account.id, 'ai-user-role')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '53ca6127-db72-4b80-b1b0-d745d6d5456d') // AI User role ID
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+  scope:account
+}
+
+
+
+resource rolePM 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(managedIdentity.id, account.id, 'project-management-role')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'eadc314b-1a2d-4efa-be10-5d325db5065e') // AI Project Management role ID
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+  scope:account
+}
+
+
 
 output aiAccountID string = account.id
 output aiAccountTarget string = account.properties.endpoint

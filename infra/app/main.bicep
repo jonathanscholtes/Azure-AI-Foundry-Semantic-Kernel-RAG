@@ -147,5 +147,5 @@ module frontEndWebApp 'frontend-web-app.bicep' = {
 output functionAppName string =  loaderFunctionWebApp.outputs.functionAppName
 output backEndWebAppName string =  backEndWebApp.outputs.backendWebAppName
 output frontendWebAppName string = frontEndWebApp.outputs.frontendWebAppName
-output appServiceURL string = frontEndWebApp.outputs.appServiceURL
+output appServiceURL string = backEndWebApp.outputs.backendWebAppURL
 output evalFunctionAppName string =  evalFunctionWebApp.outputs.functionAppName

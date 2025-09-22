@@ -13,9 +13,9 @@ $zipFilePath = "artifacts\web\app.zip"
 
 Set-Content -Path "$appPath\.env" -Value "REACT_APP_API_HOST=$apiURL"
 
-Start-Process "npm" -ArgumentList "install" -WorkingDirectory $appPath -NoNewWindow -Wait
+Start-Process "npm.cmd" -ArgumentList "install" -WorkingDirectory $appPath -NoNewWindow -Wait
 
-Start-Process "npm" -ArgumentList "run build" -WorkingDirectory $appPath -NoNewWindow -Wait
+Start-Process "npm.cmd" -ArgumentList "run build" -WorkingDirectory $appPath -NoNewWindow -Wait
 
 
 # Construct the argument list

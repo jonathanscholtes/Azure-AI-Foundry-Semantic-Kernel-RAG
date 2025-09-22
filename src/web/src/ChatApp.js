@@ -21,7 +21,7 @@ const ChatApp = () => {
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_HOST}/hrpolicy`, {
+      const response = await fetch(`${process.env.REACT_APP_API_HOST}/hrpolicy/agent`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_input: input, session_id: sessionId }),
