@@ -9,7 +9,7 @@
 
 This project demonstrates how **Azure AI Foundry Agent Service** and the **Semantic Kernel Agentic Framework** work together to deliver an end-to-end conversational knowledge agent system. The solution is enhanced with observability and monitoring provided by supporting agents.  
 
-In this example, data is vectorized and loaded into **Azure Cosmos DB** using **Azure Durable Functions**. The primary HR conversational agent, built with the Semantic Kernel Agent Framework and **Azure AI Search**, retrieves knowledge documents while preserving chat history and evaluation metrics in Cosmos DB. Additional monitoring agents, deployed with Azure AI Foundry Agent Service and executed via Azure Durable Functions, provide performance analysis and compliance insights, offering feedback to improve accuracy, reliability, and overall effectiveness.  
+In this example, data is vectorized and loaded into **Azure Cosmos DB** using **Azure Durable Functions**. The primary conversational agent, built with the Semantic Kernel Agent Framework and **Azure AI Search**, retrieves knowledge documents while preserving chat history and evaluation metrics in Cosmos DB. Additional monitoring agents, deployed with Azure AI Foundry Agent Service and executed via Azure Durable Functions, provide performance analysis and compliance insights, offering feedback to improve accuracy, reliability, and overall effectiveness.  
 
 ---
 
@@ -18,7 +18,7 @@ In this example, data is vectorized and loaded into **Azure Cosmos DB** using **
 - **End-to-End Agentic System**  
   Orchestrates multiple agents using Azure AI Foundry Agent Service and Semantic Kernel.  
 
-- **Conversational Knowledge Agent (HR Agent)**  
+- **Conversational Knowledge Agent**  
   Implements Retrieval-Augmented Generation (RAG) with Azure AI Search.  
   Maintains chat history and evaluation metrics in Cosmos DB.  
 
@@ -43,7 +43,7 @@ In this example, data is vectorized and loaded into **Azure Cosmos DB** using **
 
 ## 📐  Architecture
 
-![design](/media/diagram.png)
+![design](/media/diagram2.png)
 
 ---
 

@@ -11,3 +11,4 @@ project_users.json
 project_resource_config.json
 
 src/Notebooks/evaluate_test_data.jsonl
+src/Notebooks/04_agent_endpoint_test.ipynb
