@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 function generateUUID() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
@@ -12,11 +12,11 @@ const ChatApp = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [sessionId] = useState(() => generateUUID());
+  const chatEndRef = useRef(null);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    // Add user message to chat
     const userMessage = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
 
@@ -29,12 +29,10 @@ const ChatApp = () => {
 
       const data = await response.json();
 
-      const agentMessage = {
-        sender: "agent",
-        text: data.content || "(no response)",
-      };
-
-      setMessages((prev) => [...prev, agentMessage]);
+      setMessages((prev) => [
+        ...prev,
+        { sender: "agent", text: data.content || "(no response)" },
+      ]);
     } catch (error) {
       console.error("Error talking to agent:", error);
       setMessages((prev) => [
@@ -46,8 +44,13 @@ const ChatApp = () => {
     setInput("");
   };
 
+  // Scroll to bottom when messages update
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   return (
-    <div className="chat-container" style={styles.container}>
+    <div style={styles.container}>
       <div style={styles.chatBox}>
         {messages.map((msg, idx) => (
           <div
@@ -55,19 +58,21 @@ const ChatApp = () => {
             style={{
               ...styles.message,
               alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
-              backgroundColor: msg.sender === "user" ? "#007bff" : "#e5e5ea",
-              color: msg.sender === "user" ? "white" : "black",
+              backgroundColor: msg.sender === "user" ? "#0078D4" : "#E5E5EA",
+              color: msg.sender === "user" ? "#fff" : "#323130",
             }}
           >
             {msg.text}
           </div>
         ))}
+        <div ref={chatEndRef} />
       </div>
+
       <div style={styles.inputRow}>
         <input
           type="text"
           value={input}
-          placeholder="Type your message..."
+          placeholder="Ask about HR policies..."
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           style={styles.input}
@@ -82,13 +87,16 @@ const ChatApp = () => {
 
 const styles = {
   container: {
-    maxWidth: "600px",
-    margin: "2rem auto",
+    width: "90%",             
+    maxWidth: "900px",        
+    margin: "0 auto",      
     border: "1px solid #ccc",
-    borderRadius: "10px",
+    borderRadius: "15px",
     display: "flex",
     flexDirection: "column",
-    height: "80vh",
+    height: "70vh",           
+    backgroundColor: "#fff",
+    boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
   },
   chatBox: {
     flex: 1,
@@ -101,27 +109,32 @@ const styles = {
   message: {
     padding: "0.75rem 1rem",
     borderRadius: "20px",
-    maxWidth: "75%",
+    maxWidth: "80%",
+    fontSize: "0.95rem",
+    lineHeight: 1.4,
   },
   inputRow: {
     display: "flex",
-    padding: "0.5rem",
+    padding: "0.75rem",
     borderTop: "1px solid #ddd",
   },
   input: {
     flex: 1,
     padding: "0.75rem",
     border: "1px solid #ccc",
-    borderRadius: "5px",
+    borderRadius: "10px",
     marginRight: "0.5rem",
+    fontSize: "1rem",
   },
   button: {
     padding: "0.75rem 1.25rem",
-    backgroundColor: "#007bff",
+    backgroundColor: "#0078D4",
     color: "white",
     border: "none",
-    borderRadius: "5px",
+    borderRadius: "10px",
     cursor: "pointer",
+    fontWeight: "600",
+    fontSize: "1rem",
   },
 };
 
