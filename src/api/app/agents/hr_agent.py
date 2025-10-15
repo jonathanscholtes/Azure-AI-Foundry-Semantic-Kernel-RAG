@@ -2,6 +2,8 @@ import logging
 import uuid
 from functools import partial
 from typing import Any, Dict, Optional
+import json
+import re
 
 from semantic_kernel.agents import ChatCompletionAgent
 from app.schemas.agent import AgentResponse
@@ -31,10 +33,32 @@ class SemanticKernelHRAgent(BaseAgent):
         await super().initialize()
 
         instructions = (
-            "You are an HR assistant. You help employees with HR-related queries.\n"
-            "- Use the 'search' plugin to look up information in the HR knowledge base.\n"
-            "- Do not make up answers. If you cannot find the answer, say \"I don't know\"."
-            "- Responses should be embedded in html tags for better readability."
+            """You are an HR assistant for Policywise. Help employees with HR-related queries.
+
+                1. Context:
+                - Use the 'search' plugin to look up HR knowledge base documents.
+                - Do not make up answers. If you cannot find the answer, say "I don't know".
+
+                2. Output Rules:
+                - Return ONLY a valid JSON object.
+                - Must strictly follow this structure:
+
+                {
+                "content": str,
+                "references": [str]
+                }
+
+                3. Output Field Descriptions:
+                - "content": must include your full answer in HTML
+                - "references": List of titles of source documents referenced in the answer.
+
+                4. Additional Notes:
+                - Maintain a neutral, professional tone at all times.
+                - The 'references' field must include the **exact 'title' fields** from retrieved documents.
+                - Do not modify, shorten, or omit file extensions.
+                - If no documents are retrieved, return an empty list.
+                - If you cannot find the answer, respond with "I don't know" in the 'content' field and an empty list in 'references'.
+                """
         )
 
         search_plugin = AzureSearchPlugin()
@@ -98,13 +122,36 @@ class SemanticKernelHRAgent(BaseAgent):
         async for result in self.agent.invoke(messages=chat_history, on_intermediate_message=intermediate_handler):
             final_response = result
 
-        # Run evaluation
-        if final_response:
-            await self._run_evaluation(user_input, final_response.content.content, session_id, response_id, chat_history, metadata=metadata)
-            await self.history_store.add_message(chat_history, session_id, response_id,ChatRole.ASSISTANT, final_response.content.content, metadata=metadata)
+        # Initialize response fields
+        content = ""
+        references = []
 
+        if final_response:
+            raw_output = final_response.content.content
+            clean_content = re.sub(r"^```json\s*|```$", "", raw_output.strip(), flags=re.MULTILINE)
+
+            # Try to parse as JSON
+            try:
+                parsed = json.loads(clean_content)
+                content = parsed.get("content", "")
+                references = parsed.get("references", [])
+            except json.JSONDecodeError:
+                logging.warning("Model output was not valid JSON; using raw content.")
+                content = clean_content
+                references = []
+
+            # Run evaluation
+            await self._run_evaluation(user_input, content, session_id, response_id, chat_history, metadata=metadata)
+
+            # Save assistant message
+            await self.history_store.add_message(
+                chat_history, session_id, response_id, ChatRole.ASSISTANT, content, metadata=metadata
+            )
+
+        # Return structured response
         return AgentResponse(
-            content=final_response.content.content if final_response else "",
+            content=content,
+            references=references,
             response_id=response_id,
             is_task_complete=True,
             require_user_input=True,

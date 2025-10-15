@@ -39,6 +39,7 @@ const ChatApp = () => {
         {
           sender: "agent",
           text: data.content || "(no response)",
+          references: data.references || [],
           feedback: null,
           response_id: data.response_id || null,
         },
@@ -69,7 +70,7 @@ const ChatApp = () => {
     );
 
     const message = messages[index];
-    if (!message?.response_id) return; // Only send if response_id exists
+    if (!message?.response_id) return;
 
     try {
       await fetch(`${process.env.REACT_APP_API_HOST}/feedback`, {
@@ -94,42 +95,12 @@ const ChatApp = () => {
     <div style={styles.container}>
       <div style={styles.chatBox}>
         {messages.map((msg, idx) => (
-          <div
+          <ChatMessage
             key={idx}
-            style={{
-              ...styles.message,
-              alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
-              backgroundColor: msg.sender === "user" ? "#1A719E" : "#AAE09D",
-              color: msg.sender === "user" ? "#fff" : "#323130",
-            }}
-          >
-            {parse(msg.text)}
-
-            {msg.sender === "agent" && (
-              <div style={styles.feedbackRow}>
-                <button
-                  style={{
-                    ...styles.feedbackButton,
-                    ...(msg.feedback === "up" ? styles.feedbackSelectedUp : {}),
-                  }}
-                  onClick={() => handleFeedback(idx, "up")}
-                  title="Helpful"
-                >
-                  <ThumbsUp size={18} />
-                </button>
-                <button
-                  style={{
-                    ...styles.feedbackButton,
-                    ...(msg.feedback === "down" ? styles.feedbackSelectedDown : {}),
-                  }}
-                  onClick={() => handleFeedback(idx, "down")}
-                  title="Not helpful"
-                >
-                  <ThumbsDown size={18} />
-                </button>
-              </div>
-            )}
-          </div>
+            msg={msg}
+            idx={idx}
+            handleFeedback={handleFeedback}
+          />
         ))}
 
         {loading && (
@@ -165,6 +136,68 @@ const ChatApp = () => {
           {loading ? "..." : "Send"}
         </button>
       </div>
+    </div>
+  );
+};
+
+const ChatMessage = ({ msg, idx, handleFeedback }) => {
+  const [showRefs, setShowRefs] = useState(false);
+
+  return (
+    <div
+      style={{
+        ...styles.message,
+        alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
+        backgroundColor: msg.sender === "user" ? "#1A719E" : "#AAE09D",
+        color: msg.sender === "user" ? "#fff" : "#323130",
+      }}
+    >
+      {parse(msg.text)}
+
+      {msg.sender === "agent" && (
+        <>
+          <div style={styles.feedbackRow}>
+            <button
+              style={{
+                ...styles.feedbackButton,
+                ...(msg.feedback === "up" ? styles.feedbackSelectedUp : {}),
+              }}
+              onClick={() => handleFeedback(idx, "up")}
+              title="Helpful"
+            >
+              <ThumbsUp size={18} />
+            </button>
+            <button
+              style={{
+                ...styles.feedbackButton,
+                ...(msg.feedback === "down" ? styles.feedbackSelectedDown : {}),
+              }}
+              onClick={() => handleFeedback(idx, "down")}
+              title="Not helpful"
+            >
+              <ThumbsDown size={18} />
+            </button>
+          </div>
+
+          {msg.references && msg.references.length > 0 && (
+            <div style={styles.referencesBox}>
+              <button
+                onClick={() => setShowRefs(!showRefs)}
+                style={styles.toggleButton}
+              >
+                {showRefs ? "Hide Sources ▲" : "Show Sources ▼"}
+              </button>
+              {showRefs && (
+                <ul style={styles.referencesList}>
+                  {msg.references.map((ref, i) => (
+                    <li key={i}>{ref}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
@@ -225,6 +258,28 @@ const styles = {
     borderColor: "#d13438",
     color: "#d13438",
   },
+  referencesBox: {
+    marginTop: "0.5rem",
+    backgroundColor: "#f7f7f7",
+    borderRadius: "10px",
+    padding: "0.5rem 0.75rem",
+    fontSize: "0.85rem",
+    color: "#444",
+  },
+  referencesList: {
+    margin: "0.25rem 0 0 1rem",
+    padding: 0,
+    listStyleType: "disc",
+  },
+  toggleButton: {
+    background: "none",
+    border: "none",
+    color: "#0078D4",
+    cursor: "pointer",
+    fontSize: "0.85rem",
+    fontWeight: 500,
+    padding: 0,
+  },
   inputRow: {
     display: "flex",
     padding: "0.75rem",
@@ -262,7 +317,7 @@ const styles = {
   },
 };
 
-// inject keyframes for spinner
+// inject spinner keyframes
 const styleSheet = document.styleSheets[0];
 if (styleSheet) {
   styleSheet.insertRule(
