@@ -8,5 +8,6 @@ class AgentRequest(BaseModel):
 
 class AgentResponse(BaseModel):
     content: str
+    response_id: str
     is_task_complete: bool
     require_user_input: bool

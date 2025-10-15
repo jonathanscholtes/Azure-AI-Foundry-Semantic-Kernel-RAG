@@ -8,6 +8,7 @@ param appInsightsName string
 param cosmosdbEnpoint string
 param cosmosdbDatabase string ='chatdatabase'
 param cosmosdbHistoryContainer string ='chathistory'
+param cosmosdbFeedbackContainer string ='feedback'
 param cosmosdbEvaluationContainer string
 
 
@@ -72,6 +73,10 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
          {
           name: 'COSMOSDB_HISTORY_CONTAINER'
           value: cosmosdbHistoryContainer
+        } 
+          {
+          name: 'COSMOSDB_FEEDBACK_CONTAINER'
+          value: cosmosdbFeedbackContainer
         } 
          {
           name: 'COSMOSDB_EVALUATIONS_CONTAINER'

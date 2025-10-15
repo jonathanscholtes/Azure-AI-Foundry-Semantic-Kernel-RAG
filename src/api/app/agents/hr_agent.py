@@ -34,6 +34,7 @@ class SemanticKernelHRAgent(BaseAgent):
             "You are an HR assistant. You help employees with HR-related queries.\n"
             "- Use the 'search' plugin to look up information in the HR knowledge base.\n"
             "- Do not make up answers. If you cannot find the answer, say \"I don't know\"."
+            "- Responses should be embedded in html tags for better readability."
         )
 
         search_plugin = AzureSearchPlugin()
@@ -104,6 +105,7 @@ class SemanticKernelHRAgent(BaseAgent):
 
         return AgentResponse(
             content=final_response.content.content if final_response else "",
+            response_id=response_id,
             is_task_complete=True,
             require_user_input=True,
         )

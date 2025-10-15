@@ -9,11 +9,12 @@
     "@mui/material": "^5.15.10",
     "cra-template": "1.2.0",
     "dotenv": "^16.4.5",
+    "html-react-parser": "^5.1.10",
+    "lucide-react": "^0.545.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.22.1",
     "react-scripts": "5.0.1",
-    "html-react-parser": "^5.1.10",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

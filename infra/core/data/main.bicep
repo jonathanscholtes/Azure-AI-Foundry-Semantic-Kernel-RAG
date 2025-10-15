@@ -112,6 +112,29 @@ module cosmosDb 'cosmosdb/main.bicep' = {
     vectorEmbeddingPolicy: {
       vectorEmbeddings: [] // Placeholder for future vector embedding configuration
     }
+  },{
+    name: 'feedback' // Container for storing chat sessions and messages (chat history)
+    partitionKeyPaths: [
+      '/id' 
+    ]
+    ttlValue: 0 
+    indexingPolicy: {
+      automatic: true // Automatically index new data
+      indexingMode: 'consistent' // Ensure data is indexed immediately
+      includedPaths: [
+        {
+          path: '/response_id/?' 
+        }
+      ]
+      excludedPaths: [
+        {
+          path: '/*' // Exclude all other paths from indexing
+        }
+      ]
+    }
+    vectorEmbeddingPolicy: {
+      vectorEmbeddings: [] // Placeholder for future vector embedding configuration
+    }
   }
  
 ]
