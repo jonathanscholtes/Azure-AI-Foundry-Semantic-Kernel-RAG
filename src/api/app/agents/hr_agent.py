@@ -33,7 +33,7 @@ class SemanticKernelHRAgent(BaseAgent):
         await super().initialize()
 
         instructions = (
-            """You are an HR assistant for Policywise. Help employees with HR-related queries.
+            """You are an HR assistant. Help employees with HR-related queries.
 
                 1. Context:
                 - Use the 'search' plugin to look up HR knowledge base documents.
