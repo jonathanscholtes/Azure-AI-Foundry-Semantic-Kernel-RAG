@@ -55,6 +55,10 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
           value: 'gpt-4o'
         } 
         {
+          name: 'AZURE_OPENAI_EMBEDDING_MODEL'
+          value: 'text-embedding'
+        } 
+        {
           name: 'AZURE_OPENAI_API_VERSION'
           value: '2025-01-01-preview'
         }      

@@ -106,23 +106,69 @@ class SemanticKernelHRAgent(BaseAgent):
     async def invoke(self, user_input: str, session_id: str) -> AgentResponse:
         """
         Thread-safe, per-request agent invocation.
+        Includes semantic cache lookup + store.
         """
-        response_id = str(uuid.uuid4()) ## track per session rep response
+        response_id = str(uuid.uuid4())
         chat_history = await self.history_store.load(session_id)
 
-        metadata={"agent": self.agent_name}
+        metadata = {"agent": self.agent_name}
 
-        # Add user message
-        await self.history_store.add_message(chat_history, session_id, response_id, ChatRole.USER, user_input, metadata=metadata)
+        # ----------------------------------------------------------------------
+        # 1. SEMANTIC CACHE LOOKUP (returns content + references if hit)
+        # ----------------------------------------------------------------------
+        if self.semantic_cache:
+            cached = await self.semantic_cache.get_similar(user_input)
 
-        # Bind intermediate message handler per request
-        intermediate_handler = partial(self.on_intermediate_message, session_id=session_id, response_id=response_id, chat_history=chat_history, metadata=metadata)
+            if cached:
+                logger.info(f"[CACHE HIT] Returning cached response for session={session_id}")
+
+                # Save assistant message into history so transcript stays consistent
+                await self.history_store.add_message(
+                    chat_history, session_id, response_id,
+                    ChatRole.ASSISTANT,
+                    cached["content"],
+                    metadata=metadata,
+                )
+
+                return AgentResponse(
+                    content=cached["content"],
+                    references=cached.get("references", []),
+                    response_id=response_id,
+                    is_task_complete=True,
+                    require_user_input=True,
+                )
+
+        logger.info("[CACHE MISS] Proceeding with LLM call.")
+
+        # ----------------------------------------------------------------------
+        # 2. Add user message to history
+        # ----------------------------------------------------------------------
+        await self.history_store.add_message(
+            chat_history, session_id, response_id,
+            ChatRole.USER, user_input, metadata=metadata
+        )
+
+        # ----------------------------------------------------------------------
+        # 3. Invoke the agent with tool support
+        # ----------------------------------------------------------------------
+        intermediate_handler = partial(
+            self.on_intermediate_message,
+            session_id=session_id,
+            response_id=response_id,
+            chat_history=chat_history,
+            metadata=metadata,
+        )
 
         final_response = None
-        async for result in self.agent.invoke(messages=chat_history, on_intermediate_message=intermediate_handler):
+        async for result in self.agent.invoke(
+            messages=chat_history,
+            on_intermediate_message=intermediate_handler
+        ):
             final_response = result
 
-        # Initialize response fields
+        # ----------------------------------------------------------------------
+        # 4. Parse final LLM response
+        # ----------------------------------------------------------------------
         content = ""
         references = []
 
@@ -130,25 +176,44 @@ class SemanticKernelHRAgent(BaseAgent):
             raw_output = final_response.content.content
             clean_content = re.sub(r"^```json\s*|```$", "", raw_output.strip(), flags=re.MULTILINE)
 
-            # Try to parse as JSON
             try:
                 parsed = json.loads(clean_content)
                 content = parsed.get("content", "")
                 references = parsed.get("references", [])
             except json.JSONDecodeError:
-                logging.warning("Model output was not valid JSON; using raw content.")
+                logger.warning("Model output not valid JSON; using raw content.")
                 content = clean_content
                 references = []
 
-            # Run evaluation
-            await self._run_evaluation(user_input, content, session_id, response_id, chat_history, metadata=metadata)
-
-            # Save assistant message
-            await self.history_store.add_message(
-                chat_history, session_id, response_id, ChatRole.ASSISTANT, content, metadata=metadata
+            # ------------------------------------------------------------------
+            # 5. Run your evaluation engine
+            # ------------------------------------------------------------------
+            await self._run_evaluation(
+                user_input, content, session_id, response_id, chat_history, metadata=metadata
             )
 
-        # Return structured response
+            # ------------------------------------------------------------------
+            # 6. Save assistant response to chat history
+            # ------------------------------------------------------------------
+            await self.history_store.add_message(
+                chat_history, session_id, response_id,
+                ChatRole.ASSISTANT, content, metadata=metadata
+            )
+
+            # ------------------------------------------------------------------
+            # 7. STORE IN SEMANTIC CACHE
+            # ------------------------------------------------------------------
+            if self.semantic_cache:
+                logger.info("Storing new response in semantic cache...")
+                await self.semantic_cache.store(
+                    prompt=user_input,
+                    content=content,
+                    references=references
+                )
+
+        # ----------------------------------------------------------------------
+        # 8. Return structured response to the caller
+        # ----------------------------------------------------------------------
         return AgentResponse(
             content=content,
             references=references,

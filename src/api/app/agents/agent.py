@@ -12,6 +12,7 @@ from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 
 from app.schemas.agent import AgentResponse
 from app.history.cosmos_chat_history import CosmosChatHistoryStore, ChatRole
+from app.stores.cosmos_semantic_cache import CosmosSemanticCache
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ class BaseAgent:
         self.kernel = kernel
         self.agent: Optional[ChatCompletionAgent] = None
         self.history_store: Optional[CosmosChatHistoryStore] = None
+        self.semantic_cache: Optional[CosmosSemanticCache] = None
  
 
     async def initialize(self):
@@ -69,8 +71,12 @@ class BaseAgent:
                 api_key=os.environ["AZURE_OPENAI_API_KEY"]
             ))
 
+
+        
         # Initialize history store
         self.history_store = CosmosChatHistoryStore()
+
+        self.semantic_cache = CosmosSemanticCache()
 
     async def on_intermediate_message(self, agent_result, session_id: str, response_id:str, chat_history: ChatHistory,metadata: Optional[Dict[str, Any]] = None):
         """

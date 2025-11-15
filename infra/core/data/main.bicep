@@ -135,7 +135,40 @@ module cosmosDb 'cosmosdb/main.bicep' = {
     vectorEmbeddingPolicy: {
       vectorEmbeddings: [] // Placeholder for future vector embedding configuration
     }
+  },{
+  name: 'llm_responses'
+  partitionKeyPaths: [
+      '/id' 
+    ]
+  ttlValue: 86400
+  indexingPolicy: {
+    automatic: true
+    indexingMode: 'consistent'
+    includedPaths: [
+      {
+        path: '/response_id/?'
+      }
+      {
+        path: '/result/?'
+      }
+    ]
+    excludedPaths: [
+      {
+        path: '/*'
+      }
+    ]
   }
+  vectorEmbeddingPolicy: {
+    vectorEmbeddings: [
+      {
+        path: '/prompt'
+        dataType: 'float32'
+        dimensions: 1536
+        distanceFunction: 'cosine'
+      }
+    ]
+  }
+}
  
 ]
   }

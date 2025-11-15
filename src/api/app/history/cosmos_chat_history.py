@@ -1,3 +1,5 @@
+# app/history/cosmos_chat_history.py
+
 from azure.cosmos.aio import CosmosClient
 from azure.identity.aio import DefaultAzureCredential
 from semantic_kernel.contents import ChatHistory

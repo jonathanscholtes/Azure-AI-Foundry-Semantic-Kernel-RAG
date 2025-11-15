@@ -9,6 +9,7 @@ azure-ai-agents>=1.2.0b3
 azure-ai-evaluation
 azure-identity
 python-dotenv==1.0.0
+pymongo
 azure-search-documents
 azure-cosmos
 azure-monitor-opentelemetry-exporter
